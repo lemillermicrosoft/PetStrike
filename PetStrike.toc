@@ -2,11 +2,12 @@
 ## Title: PetStrike
 ## Notes: Hunter pet mouseover-attack helper â€” send pet at mouseover target, fallback to current target.
 ## Author: GitHub Copilot c/o deehoc
-## Version: 0.3.0
+## Version: 0.3.1
 ## IconTexture: Interface\AddOns\PetStrike\Media\icon.png
 ## SavedVariables: PetStrikeDB
 
 PetStrike.lua
 PetStrike_HUD.lua
 Bindings.xml
+
 

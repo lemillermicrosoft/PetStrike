@@ -1,8 +1,7 @@
-﻿# v0.3.0
+﻿# v0.3.1
 
-Initial tagged release.
+Changes since v0.3.0.
 
-## Features
-- mouseover-first pet-attack MVP (#3) (5fe77a9)
-- initial petstrike scaffold (83ae0f9)
+## Fixes
+- add WoW XML namespace to Bindings root, drop retail-only header attr (#4) (#5) (bee4124)
 
