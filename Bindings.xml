@@ -1,0 +1,8 @@
+<Bindings>
+    <Binding name="PETSTRIKE_ATTACK" header="PETSTRIKE" category="PetStrike">
+        PetStrike_Attack()
+    </Binding>
+    <Binding name="PETSTRIKE_STOP" category="PetStrike">
+        PetStrike_Stop()
+    </Binding>
+</Bindings>
