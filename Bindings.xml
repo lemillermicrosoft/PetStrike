@@ -1,5 +1,5 @@
-<Bindings>
-    <Binding name="PETSTRIKE_ATTACK" header="PETSTRIKE" category="PetStrike">
+<Bindings xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+    <Binding name="PETSTRIKE_ATTACK" category="PetStrike">
         PetStrike_Attack()
     </Binding>
     <Binding name="PETSTRIKE_STOP" category="PetStrike">
