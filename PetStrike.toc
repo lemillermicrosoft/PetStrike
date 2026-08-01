@@ -8,6 +8,4 @@
 
 PetStrike.lua
 PetStrike_HUD.lua
-Bindings.xml
-
 
