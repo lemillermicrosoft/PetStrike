@@ -1,7 +1,7 @@
-﻿# v0.3.1
+﻿# v0.3.2
 
-Changes since v0.3.0.
+Changes since v0.3.1.
 
-## Fixes
-- add WoW XML namespace to Bindings root, drop retail-only header attr (#4) (#5) (bee4124)
+## Other
+- Remove Bindings.xml from .toc to prevent double-load (#7) (db4867e)
 
