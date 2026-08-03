@@ -1,7 +1,5 @@
 <Bindings>
-    <Binding name="PETSTRIKE_ATTACK" category="PetStrike">
-        PetStrike_Attack()
-    </Binding>
+    <Binding name="CLICK PetStrikeAttackButton:LeftButton" category="PetStrike"/>
     <Binding name="PETSTRIKE_STOP" category="PetStrike">
         PetStrike_Stop()
     </Binding>
