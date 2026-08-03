@@ -1,7 +1,7 @@
-﻿# v0.3.2
+﻿# v0.3.3
 
-Changes since v0.3.1.
+Changes since v0.3.2.
 
-## Other
-- Remove Bindings.xml from .toc to prevent double-load (#7) (db4867e)
+## Fixes
+- prevent 'action blocked' by binding secure button directly and gating protected calls (#8) (#9) (422bb3b)
 
