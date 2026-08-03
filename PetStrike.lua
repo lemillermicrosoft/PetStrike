@@ -104,7 +104,11 @@ local function MaybeAutoFollow(deadGUID)
     lastAttackGUID = nil
     -- If a new valid target is present, don't yank the pet.
     if ResolveTargetUnit() then return end
-    if UnitExists("pet") and not UnitIsDead("pet") then
+    if not (UnitExists("pet") and not UnitIsDead("pet")) then return end
+    -- PetFollow is protected in combat; defer to PLAYER_REGEN_ENABLED.
+    if InCombatLockdown() then
+        pendingFollow = true
+    else
         pcall(PetFollow)
     end
 end
@@ -113,24 +117,32 @@ end
 -- Secure attack button
 ------------------------------------------------------------
 
--- SecureActionButtonTemplate: uses "macrotext" attribute so we can drive the
--- macro conditional at click time. The dispatcher below refreshes the macrotext
--- outside of combat lockdown; in combat we fall back to the last-known macro.
+-- SecureActionButtonTemplate with a static macrotext. The keybind is bound
+-- directly to this button via Bindings.xml ("CLICK PetStrikeAttackButton:LeftButton"),
+-- so the hardware keypress drives the secure path with no Lua taint. Do NOT call
+-- attackBtn:Click() from insecure code paths in combat — that taints and produces
+-- the "action blocked" popup.
 local attackBtn = CreateFrame("Button", "PetStrikeAttackButton", UIParent, "SecureActionButtonTemplate")
-attackBtn:Hide()
 attackBtn:RegisterForClicks("AnyUp", "AnyDown")
 attackBtn:SetAttribute("type", "macro")
 attackBtn:SetAttribute("macrotext",
     "/petattack [@mouseover,harm,nodead,exists]\n" ..
     "/petattack [@target,harm,nodead,exists]")
+-- Kept off-screen (rather than :Hide()) so bindings still resolve.
+attackBtn:ClearAllPoints()
+attackBtn:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+attackBtn:SetSize(1, 1)
+attackBtn:SetAlpha(0)
 
 -- PostClick fires after the secure command runs — safe place to do auxiliary
--- work (Growl, GUID tracking, no-target complaint).
+-- work (GUID tracking, no-target complaint). Growl is deferred to non-combat.
 attackBtn:SetScript("PostClick", function()
     local unit = ResolveTargetUnit()
     if unit then
         RememberAttackGUID(unit)
-        TryCastGrowl()
+        if not InCombatLockdown() then
+            TryCastGrowl()
+        end
     else
         ComplainNoTarget()
     end
@@ -172,10 +184,12 @@ SlashCmdList["PETSTRIKE"] = function(msg)
     rest = rest and rest:lower() or ""
 
     if cmd == "" then
-        -- Route through the secure button so this works from macros too.
+        -- Route through the secure button. Only safe to Click() from Lua when
+        -- OUT of combat; in combat, insecure Click() taints and gets blocked.
+        -- Users should bind the key directly (Bindings.xml "CLICK PetStrikeAttackButton")
+        -- so hardware keypresses work in combat without going through Lua.
         if InCombatLockdown() then
-            -- Secure button click still works in combat.
-            attackBtn:Click()
+            Say("in combat — bind a key to 'Send pet at mouseover/target' in Key Bindings for combat use.")
         else
             attackBtn:Click()
         end
@@ -201,19 +215,21 @@ end
 -- Keybinding
 ------------------------------------------------------------
 
-BINDING_HEADER_PETSTRIKE       = "PetStrike"
-BINDING_NAME_PETSTRIKE_STOP    = "Stop pet (Follow)"
-BINDING_NAME_PETSTRIKE_ATTACK  = "Send pet at mouseover/target"
+BINDING_HEADER_PETSTRIKE                                = "PetStrike"
+BINDING_NAME_PETSTRIKE_STOP                             = "Stop pet (Follow)"
+_G["BINDING_NAME_CLICK PetStrikeAttackButton:LeftButton"] = "Send pet at mouseover/target"
+
+local pendingFollow = false
 
 function PetStrike_Stop()
-    if UnitExists("pet") and not UnitIsDead("pet") then
+    if not (UnitExists("pet") and not UnitIsDead("pet")) then return end
+    if InCombatLockdown() then
+        pendingFollow = true
+        Say("stop queued — will follow when out of combat.")
+    else
         pcall(PetFollow)
         lastAttackGUID = nil
     end
-end
-
-function PetStrike_Attack()
-    attackBtn:Click()
 end
 
 ------------------------------------------------------------
@@ -226,6 +242,7 @@ f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_LOGOUT")
 f:RegisterEvent("UNIT_DIED")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 f:SetScript("OnEvent", function(self, event, arg1, ...)
     if event == "ADDON_LOADED" then
@@ -245,6 +262,15 @@ f:SetScript("OnEvent", function(self, event, arg1, ...)
             if subevent == "UNIT_DIED" and destGUID then
                 MaybeAutoFollow(destGUID)
             end
+        end
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        -- Combat ended: run any deferred protected calls.
+        if pendingFollow then
+            pendingFollow = false
+            if UnitExists("pet") and not UnitIsDead("pet") then
+                pcall(PetFollow)
+            end
+            lastAttackGUID = nil
         end
     end
 end)
